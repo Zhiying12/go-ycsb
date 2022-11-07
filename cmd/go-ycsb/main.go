@@ -44,6 +44,12 @@ import (
 	_ "github.com/pingcap/go-ycsb/db/etcd"
 	// Register basic
 	_ "github.com/pingcap/go-ycsb/db/basic"
+	// Register multi-paxos
+	_ "github.com/pingcap/go-ycsb/db/multipaxos"
+	// Register paxi
+	_ "github.com/pingcap/go-ycsb/db/paxi"
+	// Register paxi-http
+	_ "github.com/pingcap/go-ycsb/db/paxi-http"
 )
 
 var (
@@ -97,14 +103,16 @@ func initialGlobal(dbName string, onProperties func()) {
 		util.Fatalf("create workload %s failed %v", workloadName, err)
 	}
 
-	dbCreator := ycsb.GetDBCreator(dbName)
-	if dbCreator == nil {
-		util.Fatalf("%s is not registered", dbName)
+	if onProperties == nil {
+		dbCreator := ycsb.GetDBCreator(dbName)
+		if dbCreator == nil {
+			util.Fatalf("%s is not registered", dbName)
+		}
+		if globalDB, err = dbCreator.Create(globalProps); err != nil {
+			util.Fatalf("create db %s failed %v", dbName, err)
+		}
+		globalDB = client.DbWrapper{globalDB}
 	}
-	if globalDB, err = dbCreator.Create(globalProps); err != nil {
-		util.Fatalf("create db %s failed %v", dbName, err)
-	}
-	globalDB = client.DbWrapper{globalDB}
 }
 
 func main() {
