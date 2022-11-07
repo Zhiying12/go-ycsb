@@ -55,7 +55,7 @@ func runClientCommandFunc(cmd *cobra.Command, args []string, doTransactions bool
 	}
 	fmt.Println("**********************************************")
 
-	c := client.NewClient(globalProps, globalWorkload, globalDB)
+	c := client.NewClient(globalProps, globalWorkload, dbName)
 	start := time.Now()
 	c.Run(globalContext)
 

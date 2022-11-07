@@ -16,6 +16,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap/go-ycsb/pkg/util"
 	"math/rand"
 	"os"
 	"sync"
@@ -29,7 +30,7 @@ import (
 
 type worker struct {
 	p               *properties.Properties
-	workDB          ycsb.DB
+	workerDB        ycsb.DB
 	workload        ycsb.Workload
 	doTransactions  bool
 	doBatch         bool
@@ -51,7 +52,7 @@ func newWorker(p *properties.Properties, threadID int, threadCount int, workload
 	}
 	w.threadID = threadID
 	w.workload = workload
-	w.workDB = db
+	w.workerDB = db
 
 	var totalOpCount int64
 	if w.doTransactions {
@@ -120,17 +121,17 @@ func (w *worker) run(ctx context.Context) {
 		opsCount := 1
 		if w.doTransactions {
 			if w.doBatch {
-				err = w.workload.DoBatchTransaction(ctx, w.batchSize, w.workDB)
+				err = w.workload.DoBatchTransaction(ctx, w.batchSize, w.workerDB)
 				opsCount = w.batchSize
 			} else {
-				err = w.workload.DoTransaction(ctx, w.workDB)
+				err = w.workload.DoTransaction(ctx, w.workerDB)
 			}
 		} else {
 			if w.doBatch {
-				err = w.workload.DoBatchInsert(ctx, w.batchSize, w.workDB)
+				err = w.workload.DoBatchInsert(ctx, w.batchSize, w.workerDB)
 				opsCount = w.batchSize
 			} else {
-				err = w.workload.DoInsert(ctx, w.workDB)
+				err = w.workload.DoInsert(ctx, w.workerDB)
 			}
 		}
 
@@ -155,13 +156,13 @@ func (w *worker) run(ctx context.Context) {
 type Client struct {
 	p        *properties.Properties
 	workload ycsb.Workload
-	db       ycsb.DB
+	dbName   string
 }
 
 // NewClient returns a client with the given workload and DB.
-// The workload and db can't be nil.
-func NewClient(p *properties.Properties, workload ycsb.Workload, db ycsb.DB) *Client {
-	return &Client{p: p, workload: workload, db: db}
+// The workload and dbName can't be nil.
+func NewClient(p *properties.Properties, workload ycsb.Workload, dbname string) *Client {
+	return &Client{p: p, workload: workload, dbName: dbname}
 }
 
 // Run runs the workload to the target DB, and blocks until all workers end.
@@ -202,26 +203,46 @@ func (c *Client) Run(ctx context.Context) {
 		}
 	}()
 
+	// Create DB for each worker
+	dbs := make([]ycsb.DB, threadCount)
+	for i := 0; i < threadCount; i++ {
+		dbs[i] = CreateDB(c.dbName, c.p)
+	}
+
 	for i := 0; i < threadCount; i++ {
 		go func(threadId int) {
 			defer wg.Done()
 
-			w := newWorker(c.p, threadId, threadCount, c.workload, c.db)
+			w := newWorker(c.p, threadId, threadCount, c.workload, dbs[threadId])
 			ctx := c.workload.InitThread(ctx, threadId, threadCount)
-			ctx = c.db.InitThread(ctx, threadId, threadCount)
+			ctx = w.workerDB.InitThread(ctx, threadId, threadCount)
 			w.run(ctx)
-			c.db.CleanupThread(ctx)
+			w.workerDB.CleanupThread(ctx)
 			c.workload.CleanupThread(ctx)
 		}(i)
 	}
 
 	wg.Wait()
-	if !c.p.GetBool(prop.DoTransactions, true) {
-		// when loading is finished, try to analyze table if possible.
-		if analyzeDB, ok := c.db.(ycsb.AnalyzeDB); ok {
-			analyzeDB.Analyze(ctx, c.p.GetString(prop.TableName, prop.TableNameDefault))
-		}
-	}
+	//TODO: probably we do not need it
+	//if !c.p.GetBool(prop.DoTransactions, true) {
+	//	// when loading is finished, try to analyze table if possible.
+	//	if analyzeDB, ok := dbs[0].(ycsb.AnalyzeDB); ok {
+	//		analyzeDB.Analyze(ctx, c.p.GetString(prop.TableName, prop.TableNameDefault))
+	//	}
+	//}
 	measureCancel()
 	<-measureCh
+}
+
+func CreateDB(dbName string, p *properties.Properties) ycsb.DB {
+	dbCreator := ycsb.GetDBCreator(dbName)
+	if dbCreator == nil {
+		util.Fatalf("%s is not registered", dbName)
+	}
+	db, err := dbCreator.Create(p)
+	if err != nil {
+		util.Fatalf("create db %s failed %v", dbName, err)
+	}
+	db = DbWrapper{db}
+	return db
 }
