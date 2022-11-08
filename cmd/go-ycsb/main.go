@@ -50,6 +50,10 @@ import (
 	_ "github.com/pingcap/go-ycsb/db/paxi"
 	// Register paxi-http
 	_ "github.com/pingcap/go-ycsb/db/paxi-http"
+	// Register vr from skyros
+	_ "github.com/pingcap/go-ycsb/db/vr"
+	// Register paxo from epaxos
+	_ "github.com/pingcap/go-ycsb/db/efficiency"
 )
 
 var (
