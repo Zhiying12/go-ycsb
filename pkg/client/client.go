@@ -115,6 +115,7 @@ func (w *worker) run(ctx context.Context) {
 	}
 
 	startTime := time.Now()
+	executionTime := w.p.GetInt64(prop.MaxExecutiontime, 0)
 
 	for w.opCount == 0 || w.opsDone < w.opCount {
 		var err error
@@ -142,6 +143,12 @@ func (w *worker) run(ctx context.Context) {
 		if measurement.IsWarmUpFinished() {
 			w.opsDone += int64(opsCount)
 			w.throttle(ctx, startTime)
+		}
+
+		if executionTime != 0 {
+			if time.Now().Sub(startTime) > time.Duration(executionTime)*time.Second {
+				return
+			}
 		}
 
 		select {
