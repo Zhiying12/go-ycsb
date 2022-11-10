@@ -1,6 +1,7 @@
 package measurement
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"sort"
@@ -66,6 +67,16 @@ func (h *histograms) Output(w io.Writer) error {
 		panic("unsupported outputstyle: " + outputStyle)
 	}
 	return nil
+}
+
+func (h *histograms) ExportLatency(w io.Writer) {
+	for _, h := range h.histograms {
+		bracketList := h.hist.CumulativeDistributionWithTicks(1000)
+		for _, bracket := range bracketList {
+			fmt.Fprintln(w, fmt.Sprintf("%v", bracket.ValueAt))
+		}
+	}
+
 }
 
 func InitHistograms(p *properties.Properties) *histograms {

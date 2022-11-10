@@ -67,6 +67,18 @@ func (m *measurement) output() {
 	if err != nil {
 		panic("failed to flush output: " + err.Error())
 	}
+
+	exportFile := m.p.GetString(prop.ExportFile, "")
+	if exportFile != "" {
+		f, err := os.Create(exportFile)
+		if err != nil {
+			panic("failed to create output file: " + err.Error())
+		}
+		fileWriter := bufio.NewWriter(f)
+		globalMeasure.measurer.ExportLatency(fileWriter)
+		fileWriter.Flush()
+		f.Close()
+	}
 }
 
 func (m *measurement) summary() {

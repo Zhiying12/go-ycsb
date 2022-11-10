@@ -28,4 +28,6 @@ type Measurer interface {
 
 	// Output writes the measurement results to the specified writer.
 	Output(w io.Writer) error
+
+	ExportLatency(w io.Writer)
 }

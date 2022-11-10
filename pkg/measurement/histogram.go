@@ -95,3 +95,7 @@ func (h *histogram) getInfo() map[string]interface{} {
 
 	return res
 }
+
+func (h *histogram) GetCumul() []hdrhistogram.Bracket {
+	return h.hist.CumulativeDistribution()
+}

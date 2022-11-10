@@ -49,3 +49,7 @@ func (c *csvs) Output(w io.Writer) error {
 func (c *csvs) Summary() {
 	// do nothing as csvs don't keep a summary
 }
+
+func (c *csvs) ExportLatency(w io.Writer) {
+
+}
