@@ -70,10 +70,14 @@ func (h *histograms) Output(w io.Writer) error {
 }
 
 func (h *histograms) ExportLatency(w io.Writer) {
+	indexList := make([]float64, 0, 10000)
+	for i := 0.01; i <= 100.0; i += 0.01 {
+		indexList = append(indexList, i)
+	}
 	for _, h := range h.histograms {
-		bracketList := h.hist.CumulativeDistributionWithTicks(1000)
-		for _, bracket := range bracketList {
-			fmt.Fprintln(w, fmt.Sprintf("%v", bracket.ValueAt))
+		bracketList := h.hist.ValueAtPercentiles(indexList)
+		for q, bracket := range bracketList {
+			fmt.Fprintln(w, fmt.Sprintf("%v %v", q, bracket))
 		}
 	}
 
