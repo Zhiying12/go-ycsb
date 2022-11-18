@@ -41,7 +41,9 @@ func (c *mpaxosClient) Read(ctx context.Context, table string, key string, field
 		return nil, errors.New(KeyNotFound)
 	}
 	valueByte := []byte(result)
-	fieldMap := decode(valueByte)
+	fieldMap := map[string][]byte{
+		"field0": valueByte,
+	}
 	return fieldMap, nil
 }
 
@@ -99,9 +101,9 @@ func init() {
 
 func encode(values map[string][]byte) []byte {
 	valBytes := make([]byte, 0)
-	for field, val := range values {
-		fieldBytes := []byte(field + "=")
-		valBytes = append(valBytes, fieldBytes...)
+	for _, val := range values {
+		//fieldBytes := []byte(field + "=")
+		//valBytes = append(valBytes, fieldBytes...)
 		valBytes = append(valBytes, val...)
 	}
 	return valBytes
