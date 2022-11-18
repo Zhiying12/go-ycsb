@@ -74,7 +74,7 @@ func (r paxiCreator) Create(p *properties.Properties) (ycsb.DB, error) {
 }
 
 func init() {
-	ycsb.RegisterDBCreator("paxi", paxiCreator{})
+	ycsb.RegisterDBCreator("paxi-tcp", paxiCreator{})
 }
 
 func encode(values map[string][]byte) []byte {

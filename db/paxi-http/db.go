@@ -76,7 +76,7 @@ func (r paxiHttpCreator) Create(p *properties.Properties) (ycsb.DB, error) {
 }
 
 func init() {
-	ycsb.RegisterDBCreator("paxi-http", paxiHttpCreator{})
+	ycsb.RegisterDBCreator("paxi", paxiHttpCreator{})
 }
 
 func encode(values map[string][]byte) []byte {
