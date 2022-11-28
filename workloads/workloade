@@ -41,6 +41,6 @@ requestdistribution=uniform
 
 maxscanlength=1
 
-scanlengthdistribution=zipfian
+scanlengthdistribution=uniform
 
 
