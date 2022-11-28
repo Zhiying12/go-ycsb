@@ -74,13 +74,14 @@ func (h *histograms) ExportLatency(w io.Writer) {
 	for i := 0.01; i <= 100.0; i += 0.01 {
 		indexList = append(indexList, i)
 	}
-	for _, h := range h.histograms {
+	if h, ok := h.histograms["total"]; ok {
 		bracketList := h.hist.ValueAtPercentiles(indexList)
 		for q, bracket := range bracketList {
 			fmt.Fprintln(w, fmt.Sprintf("%v %v", q, bracket))
 		}
+	} else {
+		fmt.Println("no such operation in histogram")
 	}
-
 }
 
 func InitHistograms(p *properties.Properties) *histograms {

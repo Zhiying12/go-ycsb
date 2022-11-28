@@ -38,7 +38,7 @@ func (c *mpaxosClient) Read(ctx context.Context, table string, key string, field
 		return nil, err
 	}
 	if result == KeyNotFound {
-		return nil, errors.New(KeyNotFound)
+		return map[string][]byte{"field0": []byte("")}, nil
 	}
 	valueByte := []byte(result)
 	fieldMap := map[string][]byte{
