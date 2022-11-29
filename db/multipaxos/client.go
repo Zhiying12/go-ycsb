@@ -23,22 +23,11 @@ func NewClient(config *config.Config) *Client {
 		leaderId: config.LeaderId,
 	}
 
-	for {
-		conn, err := net.Dial("tcp", client.servers[client.leaderId])
-		if err != nil {
-			log.Printf("conn err: %v\n", err)
-			time.Sleep(500 * time.Millisecond)
-			continue
-		}
-		client.conn = conn
-		client.reader = textproto.NewReader(bufio.NewReader(conn))
-		break
-	}
 	return &client
 }
 
 func (c *Client) Get(key string) (string, error) {
-	request := "get "+ key + "\n"
+	request := "get " + key + "\n"
 	return c.sendRequest(request)
 }
 
@@ -57,18 +46,30 @@ func (c *Client) Close() {
 }
 
 func (c *Client) sendRequest(request string) (string, error) {
-	sendBuffer := []byte(request)
-	_, err := c.conn.Write(sendBuffer)
+	conn, err := net.Dial("tcp", c.servers[c.leaderId])
 	if err != nil {
+		log.Printf("conn err: %v\n", err)
+		time.Sleep(500 * time.Millisecond)
+		return "", err
+	}
+	reader := textproto.NewReader(bufio.NewReader(conn))
+
+	sendBuffer := []byte(request)
+	_, err = conn.Write(sendBuffer)
+	if err != nil {
+		conn.Close()
 		return "", err
 	}
 
-	result, err := c.reader.ReadLine()
+	result, err := reader.ReadLine()
 	if err != nil {
+		conn.Close()
 		return "", err
 	}
 	if result == "retry" || result == "leader is ..." || result == "bad command" {
+		conn.Close()
 		return "", errors.New(result)
 	}
+	conn.Close()
 	return result, nil
 }

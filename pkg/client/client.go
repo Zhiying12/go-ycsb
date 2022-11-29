@@ -40,6 +40,7 @@ type worker struct {
 	threadID        int
 	targetOpsTickNs int64
 	opsDone         int64
+	wg              sync.WaitGroup
 }
 
 func newWorker(p *properties.Properties, threadID int, threadCount int, workload ycsb.Workload, db ycsb.DB) *worker {
@@ -118,27 +119,9 @@ func (w *worker) run(ctx context.Context) {
 	executionTime := w.p.GetInt64(prop.MaxExecutiontime, 0)
 
 	for w.opCount == 0 || w.opsDone < w.opCount {
-		var err error
 		opsCount := 1
-		if w.doTransactions {
-			if w.doBatch {
-				err = w.workload.DoBatchTransaction(ctx, w.batchSize, w.workerDB)
-				opsCount = w.batchSize
-			} else {
-				err = w.workload.DoTransaction(ctx, w.workerDB)
-			}
-		} else {
-			if w.doBatch {
-				err = w.workload.DoBatchInsert(ctx, w.batchSize, w.workerDB)
-				opsCount = w.batchSize
-			} else {
-				err = w.workload.DoInsert(ctx, w.workerDB)
-			}
-		}
-
-		if err != nil && !w.p.GetBool(prop.Silence, prop.SilenceDefault) {
-			fmt.Printf("operation err: %v\n", err)
-		}
+		w.wg.Add(1)
+		go w.Do(ctx)
 
 		if measurement.IsWarmUpFinished() {
 			w.opsDone += int64(opsCount)
@@ -157,6 +140,21 @@ func (w *worker) run(ctx context.Context) {
 		default:
 		}
 	}
+	w.wg.Wait()
+}
+
+func (w *worker) Do(ctx context.Context) {
+	var err error
+	if w.doTransactions {
+		err = w.workload.DoTransaction(ctx, w.workerDB)
+	} else {
+		err = w.workload.DoInsert(ctx, w.workerDB)
+	}
+
+	if err != nil && !w.p.GetBool(prop.Silence, prop.SilenceDefault) {
+		fmt.Printf("operation err: %v\n", err)
+	}
+	w.wg.Done()
 }
 
 // Client is a struct which is used the run workload to a specific DB.

@@ -18,6 +18,7 @@ import (
 	"math/rand"
 	"os"
 	"sync"
+	"time"
 )
 
 // Fatalf prints the message and exits the program.
@@ -38,8 +39,9 @@ var letters = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 // RandBytes fills the bytes with alphabetic characters randomly
 func RandBytes(r *rand.Rand, b []byte) {
+	r1 := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := range b {
-		b[i] = letters[r.Intn(len(letters))]
+		b[i] = letters[r1.Intn(len(letters))]
 	}
 }
 
