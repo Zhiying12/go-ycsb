@@ -33,6 +33,9 @@ type measurement struct {
 	p *properties.Properties
 
 	measurer ycsb.Measurer
+
+	isIntendedEnabled bool
+	intendedStartTime map[int]time.Time
 }
 
 func (m *measurement) measure(op string, start time.Time, lan time.Duration) {
@@ -101,6 +104,10 @@ func InitMeasure(p *properties.Properties) {
 		panic("unsupported measurement type: " + measurementType)
 	}
 	EnableWarmUp(p.GetInt64(prop.WarmUpTime, 0) > 0)
+	globalMeasure.isIntendedEnabled = p.GetInt64(prop.Target, 0) != 0
+	if globalMeasure.isIntendedEnabled {
+		globalMeasure.intendedStartTime = make(map[int]time.Time)
+	}
 }
 
 // Output prints the complete measurements.
@@ -132,6 +139,25 @@ func Measure(op string, start time.Time, lan time.Duration) {
 	if IsWarmUpFinished() {
 		globalMeasure.measure(op, start, lan)
 	}
+}
+
+func IsIntendedMeasurementEnabled() bool {
+	return globalMeasure.isIntendedEnabled
+}
+
+func SetNextIntendedTime(workerID int, startTime time.Time) {
+	globalMeasure.Lock()
+	defer globalMeasure.Unlock()
+	globalMeasure.intendedStartTime[workerID] = startTime
+}
+
+func GetIntendedStartTime(workerID int) time.Time {
+	globalMeasure.RLock()
+	defer globalMeasure.RUnlock()
+	if _, ok := globalMeasure.intendedStartTime[workerID]; !ok {
+		globalMeasure.intendedStartTime[workerID] = time.Now()
+	}
+	return globalMeasure.intendedStartTime[workerID]
 }
 
 var globalMeasure *measurement

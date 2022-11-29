@@ -98,7 +98,11 @@ func (w *worker) throttle(ctx context.Context, startTime time.Time) {
 	}
 
 	d := time.Duration(w.opsDone * w.targetOpsTickNs)
-	d = startTime.Add(d).Sub(time.Now())
+	nextIntendedStartTime := startTime.Add(d)
+	if w.targetOpsTickNs > 0.0 {
+		measurement.SetNextIntendedTime(w.threadID, nextIntendedStartTime)
+	}
+	d = nextIntendedStartTime.Sub(time.Now())
 	if d < 0 {
 		return
 	}
@@ -213,7 +217,7 @@ func (c *Client) Run(ctx context.Context) {
 	// Create DB for each worker
 	dbs := make([]ycsb.DB, threadCount)
 	for i := 0; i < threadCount; i++ {
-		dbs[i] = CreateDB(c.dbName, c.p)
+		dbs[i] = CreateDB(c.dbName, c.p, i)
 	}
 
 	for i := 0; i < threadCount; i++ {
@@ -241,7 +245,7 @@ func (c *Client) Run(ctx context.Context) {
 	<-measureCh
 }
 
-func CreateDB(dbName string, p *properties.Properties) ycsb.DB {
+func CreateDB(dbName string, p *properties.Properties, workerID int) ycsb.DB {
 	dbCreator := ycsb.GetDBCreator(dbName)
 	if dbCreator == nil {
 		util.Fatalf("%s is not registered", dbName)
@@ -250,6 +254,6 @@ func CreateDB(dbName string, p *properties.Properties) ycsb.DB {
 	if err != nil {
 		util.Fatalf("create db %s failed %v", dbName, err)
 	}
-	db = DbWrapper{db}
+	db = DbWrapper{WorkerID: workerID, DB: db}
 	return db
 }

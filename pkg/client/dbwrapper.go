@@ -24,11 +24,13 @@ import (
 
 // DbWrapper stores the pointer to a implementation of ycsb.DB.
 type DbWrapper struct {
-	DB ycsb.DB
+	WorkerID int
+	DB       ycsb.DB
 }
 
-func measure(start time.Time, op string, err error) {
-	lan := time.Now().Sub(start)
+func measure(start time.Time, op string, err error, workerID int) {
+	endTime := time.Now()
+	lan := endTime.Sub(start)
 	if err != nil {
 		measurement.Measure(fmt.Sprintf("%s_ERROR", op), start, lan)
 		return
@@ -36,6 +38,10 @@ func measure(start time.Time, op string, err error) {
 
 	//measurement.Measure(op, start, lan)
 	measurement.Measure("total", start, lan)
+	if measurement.IsIntendedMeasurementEnabled() {
+		intendedTime := endTime.Sub(measurement.GetIntendedStartTime(workerID))
+		measurement.Measure("Intended", start, intendedTime)
+	}
 }
 
 func (db DbWrapper) Close() error {
@@ -53,7 +59,7 @@ func (db DbWrapper) CleanupThread(ctx context.Context) {
 func (db DbWrapper) Read(ctx context.Context, table string, key string, fields []string) (_ map[string][]byte, err error) {
 	start := time.Now()
 	defer func() {
-		measure(start, "READ", err)
+		measure(start, "READ", err, db.WorkerID)
 	}()
 
 	return db.DB.Read(ctx, table, key, fields)
@@ -64,7 +70,7 @@ func (db DbWrapper) BatchRead(ctx context.Context, table string, keys []string, 
 	if ok {
 		start := time.Now()
 		defer func() {
-			measure(start, "BATCH_READ", err)
+			measure(start, "BATCH_READ", err, db.WorkerID)
 		}()
 		return batchDB.BatchRead(ctx, table, keys, fields)
 	}
@@ -80,7 +86,7 @@ func (db DbWrapper) BatchRead(ctx context.Context, table string, keys []string, 
 func (db DbWrapper) Scan(ctx context.Context, table string, startKey string, count int, fields []string) (_ []map[string][]byte, err error) {
 	start := time.Now()
 	defer func() {
-		measure(start, "SCAN", err)
+		measure(start, "SCAN", err, db.WorkerID)
 	}()
 
 	return db.DB.Scan(ctx, table, startKey, count, fields)
@@ -89,7 +95,7 @@ func (db DbWrapper) Scan(ctx context.Context, table string, startKey string, cou
 func (db DbWrapper) Update(ctx context.Context, table string, key string, values map[string][]byte) (err error) {
 	start := time.Now()
 	defer func() {
-		measure(start, "UPDATE", err)
+		measure(start, "UPDATE", err, db.WorkerID)
 	}()
 
 	return db.DB.Update(ctx, table, key, values)
@@ -100,7 +106,7 @@ func (db DbWrapper) BatchUpdate(ctx context.Context, table string, keys []string
 	if ok {
 		start := time.Now()
 		defer func() {
-			measure(start, "BATCH_UPDATE", err)
+			measure(start, "BATCH_UPDATE", err, db.WorkerID)
 		}()
 		return batchDB.BatchUpdate(ctx, table, keys, values)
 	}
@@ -116,7 +122,7 @@ func (db DbWrapper) BatchUpdate(ctx context.Context, table string, keys []string
 func (db DbWrapper) Insert(ctx context.Context, table string, key string, values map[string][]byte) (err error) {
 	start := time.Now()
 	defer func() {
-		measure(start, "INSERT", err)
+		measure(start, "INSERT", err, db.WorkerID)
 	}()
 
 	return db.DB.Insert(ctx, table, key, values)
@@ -127,7 +133,7 @@ func (db DbWrapper) BatchInsert(ctx context.Context, table string, keys []string
 	if ok {
 		start := time.Now()
 		defer func() {
-			measure(start, "BATCH_INSERT", err)
+			measure(start, "BATCH_INSERT", err, db.WorkerID)
 		}()
 		return batchDB.BatchInsert(ctx, table, keys, values)
 	}
@@ -143,7 +149,7 @@ func (db DbWrapper) BatchInsert(ctx context.Context, table string, keys []string
 func (db DbWrapper) Delete(ctx context.Context, table string, key string) (err error) {
 	start := time.Now()
 	defer func() {
-		measure(start, "DELETE", err)
+		measure(start, "DELETE", err, db.WorkerID)
 	}()
 
 	return db.DB.Delete(ctx, table, key)
@@ -154,7 +160,7 @@ func (db DbWrapper) BatchDelete(ctx context.Context, table string, keys []string
 	if ok {
 		start := time.Now()
 		defer func() {
-			measure(start, "BATCH_DELETE", err)
+			measure(start, "BATCH_DELETE", err, db.WorkerID)
 		}()
 		return batchDB.BatchDelete(ctx, table, keys)
 	}
