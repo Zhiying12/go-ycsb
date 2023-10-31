@@ -34,6 +34,6 @@ func (c *Client) Get(key string) (paxi.Value, error) {
 }
 
 func (c *Client) Put(key string, val string) error {
-	err := c.conn.Put(paxi.Key(key), paxi.Value(val))
-	return err
+	c.conn.Put(paxi.Key(key), paxi.Value(val))
+	return nil 
 }

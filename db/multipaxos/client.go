@@ -62,12 +62,15 @@ func (c *Client) sendRequest(request string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	//return "", err
 
 	result, err := c.reader.ReadLine()
 	if err != nil {
+		//log.Println(err)
 		return "", err
 	}
 	if result == "retry" || result == "leader is ..." || result == "bad command" {
+		//log.Println(result)
 		return "", errors.New(result)
 	}
 	return result, nil

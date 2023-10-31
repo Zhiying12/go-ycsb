@@ -82,7 +82,7 @@ func init() {
 func encode(values map[string][]byte) []byte {
 	valBytes := make([]byte, 0)
 	for field, val := range values {
-		fieldBytes := []byte(" " + field + "=")
+		fieldBytes := []byte(field + "=")
 		valBytes = append(valBytes, fieldBytes...)
 		valBytes = append(valBytes, val...)
 	}
