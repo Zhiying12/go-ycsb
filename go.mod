@@ -17,8 +17,9 @@ require (
 	github.com/ailidani/paxi v0.0.0-00010101000000-000000000000
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
-	github.com/stretchr/testify v1.7.1
-	go.etcd.io/etcd/client/pkg/v3 v3.5.2
+	github.com/stretchr/testify v1.8.1
+	go.etcd.io/etcd/client/pkg/v3 v3.5.9
+	go.etcd.io/etcd/client/v2 v2.305.9
 	go.etcd.io/etcd/client/v3 v3.5.2
 	google.golang.org/protobuf v1.28.0
 )
@@ -40,8 +41,11 @@ require (
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pingcap/failpoint v0.0.0-20210918120811-547c13e3eb00 // indirect
 	github.com/pingcap/log v0.0.0-20211215031037-e024ba4eb0ee // indirect
@@ -55,7 +59,7 @@ require (
 	github.com/stathat/consistent v1.0.0 // indirect
 	github.com/tikv/pd/client v0.0.0-20220307081149-841fa61e9710 // indirect
 	github.com/twmb/murmur3 v1.1.3 // indirect
-	go.etcd.io/etcd/api/v3 v3.5.2 // indirect
+	go.etcd.io/etcd/api/v3 v3.5.9 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.20.0 // indirect
@@ -66,7 +70,7 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/grpc v1.48.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace github.com/apache/thrift => github.com/apache/thrift v0.0.0-20171203172758-327ebb6c2b6d

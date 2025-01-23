@@ -53,7 +53,9 @@ import (
 	// Register vr from skyros
 	_ "github.com/pingcap/go-ycsb/db/vr"
 	// Register paxo from epaxos
+	_ "github.com/pingcap/go-ycsb/db/copilot"
 	_ "github.com/pingcap/go-ycsb/db/efficiency"
+	_ "github.com/pingcap/go-ycsb/db/etcdv2"
 )
 
 var (
