@@ -105,7 +105,7 @@ const (
 	SilenceDefault = true
 
 	KeyPrefix        = "keyprefix"
-	KeyPrefixDefault = "user-prefix"
+	KeyPrefixDefault = "user"
 
 	LogInterval = "measurement.interval"
 
